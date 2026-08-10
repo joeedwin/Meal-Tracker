@@ -4,6 +4,9 @@ const dayPicker = document.getElementById("dayPicker");
 const gridEl = document.getElementById("grid");
 const dayTotalEl = document.getElementById("dayTotal");
 const toastEl = document.getElementById("toast");
+const dayClosedEl = document.getElementById("dayClosed");
+const closeDayBtn = document.getElementById("closeDayBtn");
+const unbilledTopEl = document.getElementById("unbilledTop");
 
 function todayStr() {
   const d = new Date();
@@ -32,8 +35,12 @@ async function loadDay(dateStr) {
 }
 
 function renderGrid(data) {
-  const { mealCost, grid } = data;
+  const { mealCost, grid, closed } = data;
   const mealTypes = ["bf", "lunch", "dinner"];
+
+  dayClosedEl.textContent = closed ? "Day closed — edits locked" : "Open for edits";
+  closeDayBtn.textContent = closed ? "Reopen day" : "Close day";
+  closeDayBtn.disabled = false;
 
   gridEl.innerHTML = "";
   for (const mealType of mealTypes) {
@@ -54,6 +61,7 @@ function renderGrid(data) {
       checkbox.checked = !!row.meals[mealType];
       checkbox.dataset.personId = row.personId;
       checkbox.dataset.mealType = mealType;
+      checkbox.disabled = !!data.closed;
       checkbox.addEventListener("change", onToggle);
 
       const name = document.createElement("span");
@@ -98,6 +106,12 @@ function updateDayTotal(data) {
 let lastData = null;
 
 async function onToggle() {
+  if (lastData.closed) {
+    showToast("Day is closed, changes are not allowed.");
+    refreshDay();
+    return;
+  }
+
   lastData.grid = currentGridState(lastData);
   updateDayTotal(lastData);
 
@@ -113,7 +127,13 @@ async function onToggle() {
       lastData = await res.json();
       showToast("Saved & synced");
     } else {
-      showToast("Save failed, retrying…");
+      const payload = await res.json().catch(() => ({}));
+      if (payload.error === "date closed") {
+        showToast("Day closed, edits blocked.");
+        refreshDay();
+      } else {
+        showToast("Save failed, retrying…");
+      }
     }
   }, 400);
 }
@@ -124,6 +144,23 @@ async function refreshDay() {
   const res = await fetch(`/api/meals?action=day&date=${dateStr}`);
   lastData = await res.json();
   renderGrid(lastData);
+}
+
+async function setCloseState(closed) {
+  closeDayBtn.disabled = true;
+  const date = dayPicker.value;
+  const res = await fetch(`/api/meals?action=close`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ date, closed }),
+  });
+  if (res.ok) {
+    lastData = await res.json();
+    renderGrid(lastData);
+    showToast(closed ? "Day closed" : "Day reopened");
+  } else {
+    showToast("Unable to update day status");
+  }
 }
 
 document.getElementById("prevDay").addEventListener("click", () => {
@@ -155,6 +192,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 const rangeStart = document.getElementById("rangeStart");
 const rangeEnd = document.getElementById("rangeEnd");
 const summaryCard = document.getElementById("summaryCard");
+const unbilledTopEl = document.getElementById("unbilledTop");
 
 function monthRange() {
   const now = new Date();
@@ -172,6 +210,30 @@ async function loadSummary() {
 
 function renderSummary(data) {
   summaryCard.innerHTML = "";
+  unbilledTopEl.innerHTML = "";
+  if (data.unbilled && data.unbilled.length) {
+    const heading = document.createElement("div");
+    heading.className = "unbilled-heading";
+    heading.textContent = "Unbilled attendance (open days only)";
+    unbilledTopEl.appendChild(heading);
+
+    for (const p of data.unbilled) {
+      const row = document.createElement("div");
+      row.className = "unbilled-row";
+      const c = p.counts || {};
+      row.innerHTML = `
+        <div>
+          <div class="summary-name">${p.name}</div>
+          <div class="summary-meta">bf ${c.bf || 0} · lunch ${c.lunch || 0} · dinner ${c.dinner || 0}</div>
+        </div>
+        <div class="summary-amount">₹${p.total}</div>
+      `;
+      unbilledTopEl.appendChild(row);
+    }
+  } else {
+    unbilledTopEl.textContent = "No unbilled attendance in this range.";
+  }
+
   for (const p of data.people) {
     const row = document.createElement("div");
     row.className = "summary-row";
@@ -196,6 +258,10 @@ document.getElementById("thisMonthBtn").addEventListener("click", () => {
   rangeStart.value = s;
   rangeEnd.value = e;
   loadSummary();
+});
+
+closeDayBtn.addEventListener("click", () => {
+  setCloseState(!lastData.closed);
 });
 
 // Init

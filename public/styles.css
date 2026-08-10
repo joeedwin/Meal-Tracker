@@ -171,6 +171,46 @@ body {
   color: var(--accent);
 }
 
+.day-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fff6f0;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.unbilled-top {
+  margin-bottom: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.unbilled-heading {
+  padding: 14px 16px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+}
+
+.unbilled-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.unbilled-row:last-child {
+  border-bottom: none;
+}
+
 .range-row {
   display: flex;
   gap: 12px;
