@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Room Meal Tracker</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>🍽️ Meal Tracker</h1>
+      <p class="subtitle">Ragul · Arun · Joe · Vishakan</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="today">Day</button>
+      <button class="tab-btn" data-tab="summary">Summary</button>
+    </nav>
+
+    <section id="tab-today" class="tab-panel active">
+      <div class="day-nav">
+        <button id="prevDay" class="icon-btn" aria-label="Previous day">‹</button>
+        <input type="date" id="dayPicker" />
+        <button id="nextDay" class="icon-btn" aria-label="Next day">›</button>
+        <button id="todayBtn" class="link-btn">Today</button>
+      </div>
+
+      <div id="grid" class="grid-card">Loading…</div>
+
+      <div class="day-total-card">
+        <span>Day total</span>
+        <strong id="dayTotal">₹0</strong>
+      </div>
+    </section>
+
+    <section id="tab-summary" class="tab-panel">
+      <div class="range-row">
+        <label>From <input type="date" id="rangeStart" /></label>
+        <label>To <input type="date" id="rangeEnd" /></label>
+        <button id="thisMonthBtn" class="link-btn">This month</button>
+      </div>
+      <div id="summaryCard" class="summary-card">Loading…</div>
+    </section>
+
+    <footer class="app-footer">
+      <p>bf ₹70 · lunch ₹100 · dinner ₹70 — synced automatically, open on any device</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
