@@ -4,53 +4,231 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Room Meal Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="app">
     <header class="app-header">
-      <h1>🍽️ Meal Tracker</h1>
-      <p class="subtitle">Ragul · Arun · Joe · Vishakan</p>
+      <div class="header-main">
+        <div class="brand">
+          <span class="brand-icon">🍽️</span>
+          <div>
+            <h1>Meal Tracker</h1>
+            <p class="subtitle">Ragul · Arun · Joe · Vishakan</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div id="syncStatus" class="sync-badge" title="Sync Status">
+            <span class="sync-dot"></span>
+            <span class="sync-text">Synced</span>
+          </div>
+          <button id="themeToggle" class="icon-btn theme-btn" aria-label="Toggle theme" title="Toggle dark/light theme">
+            🌙
+          </button>
+        </div>
+      </div>
     </header>
 
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="today">Day</button>
-      <button class="tab-btn" data-tab="summary">Summary</button>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="today" role="tab" aria-selected="true">
+        <span class="tab-icon">📅</span> Day Log
+      </button>
+      <button class="tab-btn" data-tab="summary" role="tab" aria-selected="false">
+        <span class="tab-icon">📊</span> Bills & Summary
+      </button>
     </nav>
 
-    <section id="tab-today" class="tab-panel active">
-      <div class="day-nav">
-        <button id="prevDay" class="icon-btn" aria-label="Previous day">‹</button>
-        <input type="date" id="dayPicker" />
-        <button id="nextDay" class="icon-btn" aria-label="Next day">›</button>
-        <button id="todayBtn" class="link-btn">Today</button>
+    <!-- DAY TAB -->
+    <section id="tab-today" class="tab-panel active" role="tabpanel">
+      <!-- Date Navigator -->
+      <div class="date-navigator-card">
+        <div class="nav-controls">
+          <button id="prevDay" class="nav-arrow-btn" aria-label="Previous day">‹</button>
+          <div class="date-display-box">
+            <span id="dateDisplay" class="date-formatted-text">Today</span>
+            <input type="date" id="dayPicker" class="hidden-date-picker" />
+          </div>
+          <button id="nextDay" class="nav-arrow-btn" aria-label="Next day">›</button>
+        </div>
+        <div class="nav-quick-actions">
+          <button id="todayBtn" class="pill-btn active">Today</button>
+          <button id="calendarTriggerBtn" class="pill-btn outline">Change Date</button>
+        </div>
       </div>
 
-      <div class="day-status-row">
-        <span id="dayClosed" class="day-status">Open for edits</span>
-        <button id="closeDayBtn" class="link-btn">Close day</button>
+      <!-- Day Lock & Status Banner -->
+      <div class="day-status-banner">
+        <div class="status-left">
+          <span id="dayStatusDot" class="status-indicator-dot open"></span>
+          <span id="dayClosed" class="day-status-label">Open for edits</span>
+        </div>
+        <button id="closeDayBtn" class="lock-toggle-btn">
+          <span id="lockBtnIcon">🔒</span> <span id="lockBtnText">Close day</span>
+        </button>
       </div>
 
-      <div id="grid" class="grid-card">Loading…</div>
+      <!-- Meal Attendance Grid -->
+      <div id="grid" class="meals-container">Loading meals…</div>
 
-      <div class="day-total-card">
-        <span>Day total</span>
-        <strong id="dayTotal">₹0</strong>
+      <!-- Day Summary Card -->
+      <div class="day-summary-card">
+        <div class="day-summary-header">
+          <div class="day-total-info">
+            <span class="label">Day Total</span>
+            <strong id="dayTotal" class="amount">₹0</strong>
+          </div>
+          <span id="dayMealCount" class="badge-count">0 meals attended</span>
+        </div>
+        <div class="day-person-splits-container">
+          <span class="split-subhead">Today's Split</span>
+          <div id="dayPersonTotals" class="person-chips-grid"></div>
+        </div>
       </div>
     </section>
 
-    <section id="tab-summary" class="tab-panel">
-      <div class="range-row">
-        <label>From <input type="date" id="rangeStart" /></label>
-        <label>To <input type="date" id="rangeEnd" /></label>
-        <button id="thisMonthBtn" class="link-btn">This month</button>
+    <!-- SUMMARY TAB -->
+    <section id="tab-summary" class="tab-panel" role="tabpanel">
+      <!-- Date Filter Presets -->
+      <div class="filter-card">
+        <div class="preset-pills">
+          <button class="preset-btn active" data-preset="this-month">This Month</button>
+          <button class="preset-btn" data-preset="last-month">Last Month</button>
+          <button class="preset-btn" data-preset="this-week">This Week</button>
+          <button class="preset-btn" data-preset="custom">Custom</button>
+        </div>
+        <div id="customDateRow" class="range-row hidden">
+          <label>From <input type="date" id="rangeStart" /></label>
+          <label>To <input type="date" id="rangeEnd" /></label>
+          <button id="applyRangeBtn" class="apply-btn">Apply</button>
+        </div>
       </div>
-      <div id="unbilledTop" class="unbilled-top">Loading…</div>
-      <div id="summaryCard" class="summary-card">Loading…</div>
+
+      <!-- LAST BILL CLEARED SECTION -->
+      <div id="lastSettlementCard" class="settlement-hero-card">
+        <div class="skeleton-line">Loading last cleared bill…</div>
+      </div>
+
+      <!-- CURRENT TOTAL BILL OVERVIEW -->
+      <div class="bill-overview-card">
+        <div class="bill-header">
+          <div>
+            <span class="section-badge">Selected Period</span>
+            <h2 id="periodLabel" class="bill-period-title">This Month</h2>
+          </div>
+          <div class="bill-grand-total">
+            <span class="label">Total Bill</span>
+            <span id="grandTotal" class="total-number">₹0</span>
+          </div>
+        </div>
+
+        <div class="bill-metrics-row">
+          <div class="metric-pill">
+            <span class="metric-val" id="totalMealsStat">0</span>
+            <span class="metric-lbl">Total Meals</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-val" id="avgPerPersonStat">₹0</span>
+            <span class="metric-lbl">Avg / Person</span>
+          </div>
+          <div class="metric-pill alert">
+            <span class="metric-val" id="unbilledStat">₹0</span>
+            <span class="metric-lbl">Unbilled Pending</span>
+          </div>
+        </div>
+
+        <!-- Proportional Share Bar -->
+        <div class="split-bar-section">
+          <div class="split-bar-label">
+            <span>Bill Share Split</span>
+            <span id="splitBarSummary" class="text-muted">4 Roommates</span>
+          </div>
+          <div id="splitBar" class="split-bar-track"></div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS: WHATSAPP SHARE & CLEAR BILL -->
+      <div class="action-buttons-grid">
+        <button id="shareWhatsappBtn" class="action-btn share-btn">
+          <span class="btn-icon">📋</span>
+          <span>Copy for WhatsApp</span>
+        </button>
+        <button id="openSettleModalBtn" class="action-btn settle-btn">
+          <span class="btn-icon">💳</span>
+          <span>Clear & Settle Bill</span>
+        </button>
+      </div>
+
+      <!-- PER PERSON DETAILED SPLIT CARDS -->
+      <div class="section-title-row">
+        <h3>Split by Roommate</h3>
+        <span class="count-tag">4 members</span>
+      </div>
+      <div id="summaryCard" class="person-split-list">Loading…</div>
+
+      <!-- PAST SETTLEMENTS ACCORDION -->
+      <div class="history-section">
+        <button id="historyToggleBtn" class="history-toggle-btn">
+          <span>📜 View Past Cleared Bills</span>
+          <span id="historyArrow" class="arrow">▼</span>
+        </button>
+        <div id="historyContent" class="history-content hidden">
+          <div id="historyList" class="history-list">Loading history…</div>
+        </div>
+      </div>
     </section>
+
+    <!-- SETTLEMENT MODAL -->
+    <div id="settleModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settleModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="settleModalTitle">Clear & Settle Bill</h3>
+          <button id="closeModalBtn" class="modal-close-btn" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">
+            Marking this range as cleared creates a permanent settlement record and locks the included days.
+          </p>
+          <div class="modal-summary-box">
+            <div class="summary-line">
+              <span>Date Range:</span>
+              <strong id="modalDateRange">—</strong>
+            </div>
+            <div class="summary-line highlight">
+              <span>Total Bill Cleared:</span>
+              <strong id="modalTotalAmount">₹0</strong>
+            </div>
+          </div>
+
+          <div id="modalSplitPreview" class="modal-splits-preview"></div>
+
+          <div class="form-group">
+            <label for="settleNotes">Settlement Note (Optional)</label>
+            <input type="text" id="settleNotes" placeholder="e.g. Paid cook via GPay / Split cleared" />
+          </div>
+          <div class="form-group">
+            <label for="settledBy">Paid / Recorded By (Optional)</label>
+            <input type="text" id="settledBy" placeholder="e.g. Arun" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelSettleBtn" class="modal-btn cancel">Cancel</button>
+          <button id="confirmSettleBtn" class="modal-btn confirm">Confirm & Clear Bill</button>
+        </div>
+      </div>
+    </div>
 
     <footer class="app-footer">
-      <p>bf ₹70 · lunch ₹100 · dinner ₹70 — synced automatically, open on any device</p>
+      <div class="meal-rates-badge">
+        <span>🌅 Breakfast ₹70</span>
+        <span class="sep">·</span>
+        <span>☀️ Lunch ₹100</span>
+        <span class="sep">·</span>
+        <span>🌙 Dinner ₹70</span>
+      </div>
+      <p class="footer-note">Synced automatically · Open on any device</p>
     </footer>
   </div>
 
