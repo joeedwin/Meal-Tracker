@@ -14,11 +14,19 @@ per meal (bf ₹70, lunch ₹100, dinner ₹70) and charged per person who atten
   - "Summary" tab: date-range totals per person plus a room grand total.
 - `netlify/functions/meals.ts` — single Netlify Function serving `/api/meals`:
   - `GET ?action=day&date=YYYY-MM-DD` — returns the attendance grid for a date, falling back to
-    default attendance for any (person, meal) pair with no saved row yet.
+    default attendance for any (person, meal) pair with no saved row yet, plus day totals.
   - `POST ?action=day` — upserts the full grid for a date.
-  - `GET ?action=summary&start=YYYY-MM-DD&end=YYYY-MM-DD` — aggregates cost totals over a range.
-- `db/schema.ts` — Drizzle schema: `persons` (fixed 4 rows, seeded via migration) and
-  `meal_entries` (one row per date/person/meal-type, unique constraint enforces upsert semantics).
+  - `POST ?action=close` — locks or unlocks a date for edits.
+  - `GET ?action=summary&start=YYYY-MM-DD&end=YYYY-MM-DD` — aggregates cost totals over a range,
+    including roommate split breakdown, unbilled totals, and the last cleared bill.
+  - `GET ?action=last_settlement` — returns the most recent cleared bill and per-person split.
+  - `GET ?action=settlements` — returns list of past bill settlements.
+  - `POST ?action=settle` — records a cleared bill for a date range, saves per-person items, and locks included days.
+- `db/schema.ts` — Drizzle schema:
+  - `persons` (fixed 4 rows, seeded via migration)
+  - `meal_entries` (one row per date/person/meal-type, unique constraint enforces upsert semantics)
+  - `meal_days` (tracks closed/locked status for each date)
+  - `bill_settlements` and `bill_settlement_items` (tracks cleared bills, date ranges, totals, and per-person splits)
 - `netlify/database/migrations/` — auto-applied Postgres migrations (schema + seed data). Never
   hand-edit an applied migration; add a new one instead.
 
