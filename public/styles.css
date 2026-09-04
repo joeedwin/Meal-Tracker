@@ -1396,3 +1396,324 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* =======================================
+   DAILY SHEET (SUMMARY WITH INITIALS)
+   ======================================= */
+
+.sheet-preset-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sheet-preset-btn:hover {
+  background: var(--bg-card-subtle);
+  color: var(--ink-primary);
+}
+
+.sheet-preset-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(217, 90, 43, 0.25);
+}
+
+.sheet-overview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.sheet-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.initials-legend-box {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.legend-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-secondary);
+}
+
+.legend-hint {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+.initials-legend-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roommate-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.roommate-filter-pill:hover {
+  border-color: var(--border-strong);
+  color: var(--ink-primary);
+}
+
+.roommate-filter-pill.active {
+  background: var(--ink-primary);
+  color: var(--bg-card);
+  border-color: var(--ink-primary);
+}
+
+.roommate-filter-pill.active .initial-badge {
+  box-shadow: 0 0 0 1px white;
+}
+
+/* Initial Badges */
+.initial-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.initial-badge.ragul { background: var(--color-ragul); }
+.initial-badge.arun { background: var(--color-arun); }
+.initial-badge.joe { background: var(--color-joe); }
+.initial-badge.vishakan { background: var(--color-vishakan); }
+
+.initial-badge.dimmed {
+  opacity: 0.22;
+  filter: grayscale(80%);
+}
+
+.initial-badge.highlighted {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--ink-primary);
+}
+
+/* Daily Sheet List & Cards */
+.daily-sheet-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet-day-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sheet-day-card:hover {
+  border-color: var(--border-strong);
+}
+
+.sheet-day-card.filtered-out {
+  display: none;
+}
+
+.sheet-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sheet-day-date-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet-day-date {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.sheet-day-status {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+
+.sheet-day-status.locked {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.sheet-day-status.open {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.sheet-day-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-day-total {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.sheet-day-meals-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.sheet-meal-box {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 58px;
+}
+
+.sheet-meal-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.sheet-meal-initials {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  min-height: 22px;
+}
+
+.sheet-empty-attendees {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.sheet-day-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 8px;
+}
+
+.sheet-day-meal-count {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  font-weight: 500;
+}
+
+.sheet-jump-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-secondary);
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.sheet-jump-btn:hover {
+  background: var(--bg-card-subtle);
+  border-color: var(--ink-primary);
+  color: var(--ink-primary);
+}
+
+.sheet-empty-state {
+  text-align: center;
+  padding: 36px 16px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--ink-secondary);
+}
+
+.sheet-empty-state .empty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.sheet-empty-state p {
+  font-size: 0.85rem;
+  margin-top: 4px;
+  color: var(--ink-muted);
+}
+
