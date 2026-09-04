@@ -39,6 +39,9 @@
       <button class="tab-btn" data-tab="summary" role="tab" aria-selected="false">
         <span class="tab-icon">📊</span> Bills & Summary
       </button>
+      <button class="tab-btn" data-tab="sheet" role="tab" aria-selected="false">
+        <span class="tab-icon">📋</span> Daily Sheet
+      </button>
     </nav>
 
     <!-- DAY TAB -->
@@ -177,6 +180,81 @@
         <div id="historyContent" class="history-content hidden">
           <div id="historyList" class="history-list">Loading history…</div>
         </div>
+      </div>
+    </section>
+
+    <!-- DAILY SHEET TAB -->
+    <section id="tab-sheet" class="tab-panel" role="tabpanel">
+      <!-- Date Filter Presets -->
+      <div class="filter-card">
+        <div class="preset-pills">
+          <button class="sheet-preset-btn active" data-preset="this-month">This Month</button>
+          <button class="sheet-preset-btn" data-preset="last-month">Last Month</button>
+          <button class="sheet-preset-btn" data-preset="this-week">This Week</button>
+          <button class="sheet-preset-btn" data-preset="custom">Custom</button>
+        </div>
+        <div id="sheetCustomDateRow" class="range-row hidden">
+          <label>From <input type="date" id="sheetRangeStart" /></label>
+          <label>To <input type="date" id="sheetRangeEnd" /></label>
+          <button id="sheetApplyRangeBtn" class="apply-btn">Apply</button>
+        </div>
+      </div>
+
+      <!-- Quick Summary Banner -->
+      <div class="sheet-overview-card">
+        <div class="sheet-header">
+          <div>
+            <span class="section-badge">Attendance Sheet</span>
+            <h2 id="sheetPeriodLabel" class="bill-period-title">This Month</h2>
+          </div>
+          <div class="sheet-period-stats">
+            <span class="sheet-badge" id="sheetDaysCount">0 Days</span>
+          </div>
+        </div>
+
+        <div class="bill-metrics-row">
+          <div class="metric-pill">
+            <span class="metric-val" id="sheetTotalMealsStat">0</span>
+            <span class="metric-lbl">Total Meals</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-val" id="sheetTotalCostStat">₹0</span>
+            <span class="metric-lbl">Period Bill</span>
+          </div>
+        </div>
+
+        <!-- Roommate Initial Legend & Highlight Filter -->
+        <div class="initials-legend-box">
+          <div class="legend-header">
+            <span class="legend-title">Roommate Filter:</span>
+            <span class="legend-hint">Tap to filter</span>
+          </div>
+          <div class="initials-legend-chips" id="sheetRoommateFilterGroup">
+            <button class="roommate-filter-pill active" data-filter="all">All</button>
+            <button class="roommate-filter-pill" data-filter="ragul">
+              <span class="initial-badge ragul">R</span> Ragul
+            </button>
+            <button class="roommate-filter-pill" data-filter="arun">
+              <span class="initial-badge arun">A</span> Arun
+            </button>
+            <button class="roommate-filter-pill" data-filter="joe">
+              <span class="initial-badge joe">J</span> Joe
+            </button>
+            <button class="roommate-filter-pill" data-filter="vishakan">
+              <span class="initial-badge vishakan">V</span> Vishakan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Entries List -->
+      <div class="section-title-row">
+        <h3>Daily Meal Attendance</h3>
+        <span id="sheetDaysBadge" class="count-tag">0 days recorded</span>
+      </div>
+
+      <div id="dailySheetList" class="daily-sheet-container">
+        <div class="skeleton-line">Loading daily attendance…</div>
       </div>
     </section>
 

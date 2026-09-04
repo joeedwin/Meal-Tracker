@@ -171,12 +171,29 @@ async function getSummary(start: string, end: string) {
     allPersons.map((p) => [p.id, { bf: 0, lunch: 0, dinner: 0, count: 0, amount: 0 }]),
   );
 
+  const personMap = new Map<number, { id: number; name: string; initial: string }>(
+    allPersons.map((p) => [p.id, { id: p.id, name: p.name, initial: p.name.charAt(0).toUpperCase() }]),
+  );
+
+  const dayEntriesMap = new Map<string, {
+    date: string;
+    closed: boolean;
+    meals: {
+      bf: Array<{ personId: number; name: string; initial: string }>;
+      lunch: Array<{ personId: number; name: string; initial: string }>;
+      dinner: Array<{ personId: number; name: string; initial: string }>;
+    };
+    dayTotal: number;
+    totalMeals: number;
+  }>();
+
   let totalMealsCount = 0;
   for (const r of rows) {
     if (!r.attended) continue;
     const dateKey = String(r.entryDate).slice(0, 10);
     const isClosed = closedMap.get(dateKey) ?? false;
     const mType = r.mealType as "bf" | "lunch" | "dinner";
+    const person = personMap.get(r.personId);
 
     totalMealsCount++;
     totals.set(r.personId, (totals.get(r.personId) ?? 0) + (MEAL_COST[mType] ?? 0));
@@ -191,7 +208,45 @@ async function getSummary(start: string, end: string) {
         u.amount += MEAL_COST[mType] ?? 0;
       }
     }
+
+    if (person) {
+      if (!dayEntriesMap.has(dateKey)) {
+        dayEntriesMap.set(dateKey, {
+          date: dateKey,
+          closed: isClosed,
+          meals: { bf: [], lunch: [], dinner: [] },
+          dayTotal: 0,
+          totalMeals: 0,
+        });
+      }
+      const dayObj = dayEntriesMap.get(dateKey)!;
+      if (dayObj.meals[mType]) {
+        dayObj.meals[mType].push({
+          personId: person.id,
+          name: person.name,
+          initial: person.initial,
+        });
+        dayObj.dayTotal += MEAL_COST[mType] ?? 0;
+        dayObj.totalMeals += 1;
+      }
+    }
   }
+
+  // Also include closed dates if recorded
+  for (const d of dayRows) {
+    const dateKey = String(d.entryDate).slice(0, 10);
+    if (!dayEntriesMap.has(dateKey)) {
+      dayEntriesMap.set(dateKey, {
+        date: dateKey,
+        closed: d.closed,
+        meals: { bf: [], lunch: [], dinner: [] },
+        dayTotal: 0,
+        totalMeals: 0,
+      });
+    }
+  }
+
+  const days = Array.from(dayEntriesMap.values()).sort((a, b) => b.date.localeCompare(a.date));
 
   const grandTotal = [...totals.values()].reduce((a, b) => a + b, 0);
   const unbilledGrandTotal = [...unbilled.values()].reduce((a, b) => a + b.amount, 0);
@@ -226,6 +281,7 @@ async function getSummary(start: string, end: string) {
     })),
     unbilledGrandTotal,
     grandTotal,
+    days,
     lastSettlement,
   };
 }

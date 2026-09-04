@@ -70,9 +70,24 @@ const historyContent = document.getElementById("historyContent");
 const historyList = document.getElementById("historyList");
 const historyArrow = document.getElementById("historyArrow");
 
+// Daily Sheet Elements
+const sheetRangeStart = document.getElementById("sheetRangeStart");
+const sheetRangeEnd = document.getElementById("sheetRangeEnd");
+const sheetCustomDateRow = document.getElementById("sheetCustomDateRow");
+const sheetApplyRangeBtn = document.getElementById("sheetApplyRangeBtn");
+const sheetPeriodLabel = document.getElementById("sheetPeriodLabel");
+const sheetDaysCount = document.getElementById("sheetDaysCount");
+const sheetTotalMealsStat = document.getElementById("sheetTotalMealsStat");
+const sheetTotalCostStat = document.getElementById("sheetTotalCostStat");
+const sheetDaysBadge = document.getElementById("sheetDaysBadge");
+const dailySheetList = document.getElementById("dailySheetList");
+const sheetRoommateFilterGroup = document.getElementById("sheetRoommateFilterGroup");
+
 // State
 let lastData = null;
 let currentSummaryData = null;
+let currentSheetData = null;
+let activeRoommateFilter = "all";
 let saveTimer = null;
 
 // Helpers
@@ -803,9 +818,256 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 
     if (tabName === "summary") {
       loadSummary();
+    } else if (tabName === "sheet") {
+      loadDailySheet();
     }
   });
 });
+
+// =======================================
+// DAILY SHEET (SUMMARY WITH INITIALS) LOGIC
+// =======================================
+
+// Preset filter buttons for Daily Sheet
+document.querySelectorAll(".sheet-preset-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".sheet-preset-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    const preset = btn.dataset.preset;
+
+    if (preset === "this-month") {
+      sheetCustomDateRow.classList.add("hidden");
+      const [s, e] = getMonthRange(0);
+      sheetRangeStart.value = s;
+      sheetRangeEnd.value = e;
+      sheetPeriodLabel.textContent = "This Month";
+      loadDailySheet();
+    } else if (preset === "last-month") {
+      sheetCustomDateRow.classList.add("hidden");
+      const [s, e] = getMonthRange(-1);
+      sheetRangeStart.value = s;
+      sheetRangeEnd.value = e;
+      sheetPeriodLabel.textContent = "Last Month";
+      loadDailySheet();
+    } else if (preset === "this-week") {
+      sheetCustomDateRow.classList.add("hidden");
+      const [s, e] = getWeekRange();
+      sheetRangeStart.value = s;
+      sheetRangeEnd.value = e;
+      sheetPeriodLabel.textContent = "This Week";
+      loadDailySheet();
+    } else if (preset === "custom") {
+      sheetCustomDateRow.classList.remove("hidden");
+      sheetPeriodLabel.textContent = "Custom Range";
+    }
+  });
+});
+
+sheetApplyRangeBtn.addEventListener("click", () => {
+  if (sheetRangeStart.value && sheetRangeEnd.value) {
+    sheetPeriodLabel.textContent = `${sheetRangeStart.value} to ${sheetRangeEnd.value}`;
+    loadDailySheet();
+  }
+});
+
+// Roommate filter pills
+sheetRoommateFilterGroup.querySelectorAll(".roommate-filter-pill").forEach((pill) => {
+  pill.addEventListener("click", () => {
+    sheetRoommateFilterGroup.querySelectorAll(".roommate-filter-pill").forEach((p) => p.classList.remove("active"));
+    pill.classList.add("active");
+    activeRoommateFilter = pill.dataset.filter;
+    applyRoommateFilter();
+  });
+});
+
+function applyRoommateFilter() {
+  const cards = dailySheetList.querySelectorAll(".sheet-day-card");
+  let visibleCount = 0;
+
+  cards.forEach((card) => {
+    const attendeesStr = card.dataset.attendees || "";
+    const attendees = attendeesStr.split(",").filter(Boolean);
+
+    if (activeRoommateFilter === "all") {
+      card.classList.remove("filtered-out");
+      visibleCount++;
+      card.querySelectorAll(".initial-badge").forEach((b) => {
+        b.classList.remove("dimmed", "highlighted");
+      });
+    } else {
+      const hasRoommate = attendees.includes(activeRoommateFilter);
+      if (hasRoommate) {
+        card.classList.remove("filtered-out");
+        visibleCount++;
+        card.querySelectorAll(".initial-badge").forEach((b) => {
+          if (b.classList.contains(activeRoommateFilter)) {
+            b.classList.remove("dimmed");
+            b.classList.add("highlighted");
+          } else {
+            b.classList.add("dimmed");
+            b.classList.remove("highlighted");
+          }
+        });
+      } else {
+        card.classList.add("filtered-out");
+      }
+    }
+  });
+
+  sheetDaysBadge.textContent = activeRoommateFilter === "all"
+    ? `${visibleCount} days recorded`
+    : `${visibleCount} days attended by ${activeRoommateFilter.charAt(0).toUpperCase() + activeRoommateFilter.slice(1)}`;
+}
+
+async function loadDailySheet() {
+  dailySheetList.innerHTML = `<div style="text-align:center; padding: 24px; color: var(--ink-secondary);">Loading daily attendance…</div>`;
+
+  try {
+    const res = await fetch(`/api/meals?action=summary&start=${sheetRangeStart.value}&end=${sheetRangeEnd.value}`);
+    const data = await res.json();
+    currentSheetData = data;
+    renderDailySheet(data);
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to load daily sheet");
+    dailySheetList.innerHTML = `<div style="text-align:center; padding: 16px; color: var(--danger);">Failed to load daily attendance data</div>`;
+  }
+}
+
+function renderDailySheet(data) {
+  const { days = [], grandTotal = 0, totalMealsCount = 0, mealCost = { bf: 70, lunch: 100, dinner: 70 } } = data;
+
+  // 1. Update Metrics Banner
+  sheetDaysCount.textContent = `${days.length} Days`;
+  sheetTotalMealsStat.textContent = totalMealsCount || 0;
+  sheetTotalCostStat.textContent = `₹${grandTotal.toLocaleString("en-IN")}`;
+  sheetDaysBadge.textContent = `${days.length} days recorded`;
+
+  // 2. Empty state check
+  if (!days || days.length === 0) {
+    dailySheetList.innerHTML = `
+      <div class="sheet-empty-state">
+        <span class="empty-icon">📭</span>
+        <strong style="color: var(--ink-primary); font-size: 0.95rem;">No Recorded Meals in this Range</strong>
+        <p>There are no saved meal entries between ${sheetRangeStart.value} and ${sheetRangeEnd.value}.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 3. Render Daily Cards
+  dailySheetList.innerHTML = "";
+
+  for (const day of days) {
+    const card = document.createElement("div");
+    card.className = "sheet-day-card";
+
+    // Gather unique attendees for filtering
+    const dayAttendees = new Set();
+    for (const m of MEAL_TYPES) {
+      const attendees = (day.meals && day.meals[m]) || [];
+      for (const a of attendees) {
+        const meta = getPersonMeta(a.name);
+        dayAttendees.add(meta.key);
+      }
+    }
+    card.dataset.attendees = Array.from(dayAttendees).join(",");
+
+    const prettyDate = formatDatePretty(day.date);
+
+    function renderMealInitialBadges(mealType) {
+      const attendees = (day.meals && day.meals[mealType]) || [];
+      if (attendees.length === 0) {
+        return `<span class="sheet-empty-attendees">—</span>`;
+      }
+      return attendees
+        .map((a) => {
+          const meta = getPersonMeta(a.name);
+          return `<span class="initial-badge ${meta.colorClass}" title="${a.name} (${MEAL_LABELS[mealType]})">${meta.initial}</span>`;
+        })
+        .join("");
+    }
+
+    card.innerHTML = `
+      <div class="sheet-day-header">
+        <div class="sheet-day-date-group">
+          <span class="sheet-day-date">${prettyDate}</span>
+          <span class="sheet-day-status ${day.closed ? "locked" : "open"}">${day.closed ? "🔒 Closed" : "🟢 Open"}</span>
+        </div>
+        <div class="sheet-day-right">
+          <span class="sheet-day-total">₹${(day.dayTotal || 0).toLocaleString("en-IN")}</span>
+        </div>
+      </div>
+
+      <div class="sheet-day-meals-row">
+        <div class="sheet-meal-box">
+          <div class="sheet-meal-label">
+            <span>🌅 Bf</span>
+            <span>₹${mealCost.bf}</span>
+          </div>
+          <div class="sheet-meal-initials">
+            ${renderMealInitialBadges("bf")}
+          </div>
+        </div>
+
+        <div class="sheet-meal-box">
+          <div class="sheet-meal-label">
+            <span>☀️ Lunch</span>
+            <span>₹${mealCost.lunch}</span>
+          </div>
+          <div class="sheet-meal-initials">
+            ${renderMealInitialBadges("lunch")}
+          </div>
+        </div>
+
+        <div class="sheet-meal-box">
+          <div class="sheet-meal-label">
+            <span>🌙 Dinner</span>
+            <span>₹${mealCost.dinner}</span>
+          </div>
+          <div class="sheet-meal-initials">
+            ${renderMealInitialBadges("dinner")}
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-day-footer">
+        <span class="sheet-day-meal-count">${day.totalMeals || 0} meals attended</span>
+        <button class="sheet-jump-btn" data-date="${day.date}" title="Open this day in Day Log">
+          <span>View / Edit</span> <span>›</span>
+        </button>
+      </div>
+    `;
+
+    dailySheetList.appendChild(card);
+  }
+
+  // Attach Jump button listeners
+  dailySheetList.querySelectorAll(".sheet-jump-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetDate = btn.dataset.date;
+      if (!targetDate) return;
+
+      // Switch tab to 'today'
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        const isTodayTab = b.dataset.tab === "today";
+        b.classList.toggle("active", isTodayTab);
+        b.setAttribute("aria-selected", isTodayTab ? "true" : "false");
+      });
+      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+      document.getElementById("tab-today").classList.add("active");
+
+      // Load that specific date
+      updateDateDisplay(targetDate);
+      loadDay(targetDate);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      showToast(`Navigated to ${targetDate}`);
+    });
+  });
+
+  // Apply active roommate filter
+  applyRoommateFilter();
+}
 
 // App Initialization
 (function init() {
@@ -815,5 +1077,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
   const [s, e] = getMonthRange(0);
   rangeStart.value = s;
   rangeEnd.value = e;
+  sheetRangeStart.value = s;
+  sheetRangeEnd.value = e;
   refreshDay();
 })();
